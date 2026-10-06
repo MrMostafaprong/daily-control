@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link href="https://fonts.googleapis.com/css2?family=Changa:wght@400;700&family=Zain:wght@400;700&family=Reem+Kufi:wght@400;700&family=Rakkas&family=Marhey:wght@400;700&family=Markazi+Text:wght@400;700&display=swap" rel="stylesheet" />
+    <title>Daily Control</title>
+    <script>
+      // نطبّق الثيم قبل أول رسم عشان ما يحصلش وميض
+      try {
+        var s = JSON.parse(localStorage.getItem('daily-control-settings') || '{}');
+        var r = document.documentElement;
+        r.dataset.themeFamily = s.themeFamily || 'slate';
+        r.dataset.themeMode = s.themeMode || (s.theme === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.dataset.themeFamily = 'slate';
+        document.documentElement.dataset.themeMode = 'dark';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
