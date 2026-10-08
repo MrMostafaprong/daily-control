@@ -32,6 +32,7 @@ module.exports = {
   githubWriteFile: githubService.githubWriteFile,
   githubDeleteFile: githubService.githubDeleteFile,
   githubDeleteRepo: githubService.githubDeleteRepo,
+  githubUpdateVisibility: githubService.githubUpdateVisibility,
   githubCreateIssue: githubService.githubCreateIssue,
   githubCommentIssue: githubService.githubCommentIssue,
 

@@ -57,6 +57,7 @@ const githubDeleteRepo = asyncHandler(async (req, res) => {
   const result = await services.githubDeleteRepo(req.params.owner, req.params.repo);
   res.json({ result });
 });
+const githubUpdateVisibility = asyncHandler(async (req, res) => { const result = await services.githubUpdateVisibility(req.params.owner, req.params.repo, req.body?.isPrivate); res.json({ result }); });
 
 const githubCreateIssue = asyncHandler(async (req, res) => {
   const result = await services.githubCreateIssue(req.params.owner, req.params.repo, req.body || {});
@@ -79,6 +80,7 @@ module.exports = {
   githubWriteFile,
   githubDeleteFile,
   githubDeleteRepo,
+  githubUpdateVisibility,
   githubCreateIssue,
   githubCommentIssue,
 };

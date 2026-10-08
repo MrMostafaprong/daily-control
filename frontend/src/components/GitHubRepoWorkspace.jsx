@@ -148,7 +148,6 @@ export default function GitHubRepoWorkspace({ owner, repo, onBack, onDeleted }) 
           <button className="secondary" onClick={onBack}>← رجوع للريبو</button>
           <h2 className="page-title" style={{ display: 'inline-block', marginInlineStart: '12px' }} dir="ltr">{repo.fullName}</h2>
         </div>
-        <button className="danger" onClick={deleteRepo}>حذف الريبو بالكامل</button>
       </div>
       {error && <div className="error-box">{error}</div>}
 

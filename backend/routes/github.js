@@ -13,6 +13,7 @@ router.get('/repos/:owner/:repo/contents', c.githubListContents);
 router.put('/repos/:owner/:repo/contents', c.githubWriteFile);
 router.delete('/repos/:owner/:repo/contents', c.githubDeleteFile);
 router.delete('/repos/:owner/:repo', c.githubDeleteRepo);
+router.patch('/repos/:owner/:repo', c.githubUpdateVisibility);
 router.post('/repos/:owner/:repo/issues', c.githubCreateIssue);
 router.post('/repos/:owner/:repo/issues/:issueNumber/comments', c.githubCommentIssue);
 

@@ -94,6 +94,7 @@ export const api = {
     writeFile: (owner, repo, data) => put(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents`, data),
     deleteFile: (owner, repo, data) => request(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents`, { method: 'DELETE', body: JSON.stringify(data) }),
     deleteRepo: (owner, repo) => del(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
+    updateVisibility: (owner, repo, isPrivate) => request(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`, { method: 'PATCH', body: JSON.stringify({ isPrivate }) }),
     createIssue: (owner, repo, data) => post(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues`, data),
     commentIssue: (owner, repo, issueNumber, body) => post(`/github/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/issues/${encodeURIComponent(issueNumber)}/comments`, { body }),
   },

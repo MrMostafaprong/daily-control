@@ -77,5 +77,12 @@ export default function useGitHub() {
     finally { setBusy(false); }
   }, [load, status]);
 
-  return { status, repos, loading, error, busy, reload: load, connect, disconnect, createRepo, deleteRepo };
+  const updateVisibility = useCallback(async (repo, isPrivate) => {
+    const owner = repo.fullName?.split('/')[0] || status?.login;
+    if (!window.confirm(isPrivate ? 'تحويل الريبو إلى Private؟' : 'تحويل الريبو إلى Public سيجعله ظاهرًا للجميع. هل تريد المتابعة؟')) return false;
+    setBusy(true); setError(null);
+    try { await api.github.updateVisibility(owner, repo.name, isPrivate); await load(); return true; } catch (err) { setError(err.message); throw err; } finally { setBusy(false); }
+  }, [load, status]);
+
+  return { status, repos, loading, error, busy, reload: load, connect, disconnect, createRepo, deleteRepo, updateVisibility };
 }

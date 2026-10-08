@@ -14,7 +14,7 @@ const { asyncHandler } = require('./middleware');
 const getAppInfo = asyncHandler((req, res) => {
   res.json({
     name: 'Daily Control',
-    version: '1.2.0',
+    version: '1.3.0',
     env: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
   });
@@ -66,6 +66,7 @@ module.exports = {
   githubWriteFile: githubController.githubWriteFile,
   githubDeleteFile: githubController.githubDeleteFile,
   githubDeleteRepo: githubController.githubDeleteRepo,
+  githubUpdateVisibility: githubController.githubUpdateVisibility,
   githubCreateIssue: githubController.githubCreateIssue,
   githubCommentIssue: githubController.githubCommentIssue,
 

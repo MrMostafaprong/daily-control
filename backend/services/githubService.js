@@ -289,6 +289,11 @@ async function githubDeleteRepo(owner, repo) {
   await ghFetch(repoEndpoint(owner, repo), { method: 'DELETE' });
   return { deleted: true, fullName: `${owner}/${repo}` };
 }
+async function githubUpdateVisibility(owner, repo, isPrivate) {
+  if (typeof isPrivate !== 'boolean') { const err = new Error('isPrivate must be boolean'); err.statusCode = 400; throw err; }
+  const result = await ghFetch(repoEndpoint(owner, repo), { method: 'PATCH', body: JSON.stringify({ private: isPrivate }) });
+  return { name: result.name, fullName: result.full_name, private: result.private, url: result.html_url };
+}
 
 async function githubCreateIssue(owner, repo, { title, body }) {
   if (typeof title !== 'string' || !title.trim()) {
@@ -327,6 +332,7 @@ module.exports = {
   githubWriteFile,
   githubDeleteFile,
   githubDeleteRepo,
+  githubUpdateVisibility,
   githubCreateIssue,
   githubCommentIssue,
 };

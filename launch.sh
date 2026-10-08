@@ -38,7 +38,7 @@ if ! curl -fs "$URL/api/health" >/dev/null 2>&1; then
   (cd backend; nohup node server.js >>"$LOG" 2>&1 & echo $! > "$PIDF")
   for _ in $(seq 1 40); do curl -fs "$URL/api/health" >/dev/null 2>&1 && break; sleep 0.5; done
 fi
-if curl -fs "$URL/api/health" >/dev/null 2>&1 && ! curl -fs "$URL/api/info" | grep -q '"version":"1.2.0"'; then
+if curl -fs "$URL/api/health" >/dev/null 2>&1 && ! curl -fs "$URL/api/info" | grep -q '"version":"1.3.0"'; then
   curl -fs -X POST "$URL/api/shutdown" >/dev/null 2>&1 || true
   if [ -f "$PIDF" ]; then kill "$(cat "$PIDF")" 2>/dev/null || true; rm -f "$PIDF"; fi
   sleep 0.4

@@ -16,13 +16,15 @@ export default function Projects() {
 
   useEffect(() => {
     if (!showForm) return;
+    setManual(false); setFormError(null);
     setBrowserLoading(true);
-    Promise.all([api.projects.discover().then((r) => setFound(r.projects || [])), api.projects.browse().then((r) => setBrowser(r.browser))]).catch(() => setManual(true)).finally(() => setBrowserLoading(false));
+    Promise.all([api.projects.discover().then((r) => setFound(r.projects || [])), api.projects.browse().then((r) => setBrowser(r.browser))]).catch((err) => setFormError(err.message || 'تعذر قراءة مجلدات الجهاز')).finally(() => setBrowserLoading(false));
   }, [showForm]);
   const browseTo = async (path) => { setBrowserLoading(true); try { const result = await api.projects.browse(path); setBrowser(result.browser); } catch (err) { setFormError(err.message); } finally { setBrowserLoading(false); } };
 
   const pick = (value) => {
     if (value === '__manual') { setManual(true); setForm({ ...form, path: '' }); return; }
+    setManual(false);
     const p = found.find((x) => x.path === value);
     setForm({ ...form, path: value, name: form.name || (p ? p.name : '') });
   };
@@ -71,16 +73,7 @@ export default function Projects() {
           </label>
           <label>
             المسار على الجهاز
-            {manual ? (
-              <input
-                value={form.path}
-                onChange={(e) => setForm({ ...form, path: e.target.value })}
-                placeholder="C:\projects\my-app أو /home/user/my-app"
-                dir="ltr"
-              />
-            ) : (
-              <><select value={form.path} onChange={(e) => pick(e.target.value)} dir="ltr"><option value="">— اختر مجلدًا من جهازك —</option>{browser?.parent && <option value={browser.parent}>⬆ مجلد أعلى</option>}{(browser?.folders || []).map((folder) => <option key={folder.path} value={folder.path}>{folder.name}</option>)}{found.map((p) => <option key={`project-${p.path}`} value={p.path} disabled={p.added}>{p.name} — {p.path}{p.added ? ' (مضاف)' : ''}</option>)}<option value="__manual">مسار آخر يدويًا…</option></select><div className="folder-browser-tools"><span className="text-muted path-preview" dir="ltr">{form.path || browser?.current || 'لم يتم اختيار مجلد'}</span><button type="button" className="secondary" disabled={!form.path || browserLoading} onClick={() => browseTo(form.path)}>فتح المجلد</button></div>{browserLoading && <small className="text-muted">جاري قراءة المجلدات...</small>}</>
-            )}
+            <><select value={manual ? '__manual' : form.path} onChange={(e) => pick(e.target.value)} dir="ltr"><option value="">— اختر مجلدًا من جهازك —</option>{browser?.parent && <option value={browser.parent}>⬆ مجلد أعلى</option>}{(browser?.folders || []).map((folder) => <option key={folder.path} value={folder.path}>{folder.name}</option>)}{found.map((p) => <option key={`project-${p.path}`} value={p.path} disabled={p.added}>{p.name} — {p.path}{p.added ? ' (مضاف)' : ''}</option>)}<option value="__manual">إدخال المسار يدويًا…</option></select>{manual && <input value={form.path} onChange={(e) => setForm({ ...form, path: e.target.value })} placeholder="C:\projects\my-app أو /home/user/my-app" dir="ltr" />}{!manual && <div className="folder-browser-tools"><span className="text-muted path-preview" dir="ltr">{form.path || browser?.current || 'لم يتم اختيار مجلد'}</span><button type="button" className="secondary" disabled={!form.path || browserLoading} onClick={() => browseTo(form.path)}>فتح المجلد</button></div>}{browserLoading && <small className="text-muted">جاري قراءة المجلدات...</small>}</>
           </label>
           <label>
             الوصف
