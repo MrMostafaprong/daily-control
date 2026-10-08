@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import api from '../api';
+import { readSettings } from '../lib/settings';
 
 export default function useGitHub() {
   const [status, setStatus] = useState(null); // { connected, login, ... }
@@ -65,5 +66,16 @@ export default function useGitHub() {
     return res?.repo || null;
   }, [load]);
 
-  return { status, repos, loading, error, busy, reload: load, connect, disconnect, createRepo };
+  const deleteRepo = useCallback(async (repo) => {
+    const expected = repo.fullName || repo.name;
+    const confirmation = window.prompt(`لحذف الريبو نهائيًا اكتب اسمه بالضبط:\n${expected}`);
+    if (confirmation !== expected) return false;
+    if (readSettings().confirmGithubDelete && !window.confirm('الحذف نهائي من GitHub. هل تريد المتابعة؟')) return false;
+    setBusy(true); setError(null);
+    try { const owner = repo.fullName?.split('/')[0] || status?.login; await api.github.deleteRepo(owner, repo.name); await load(); return true; }
+    catch (err) { setError(err.message); throw err; }
+    finally { setBusy(false); }
+  }, [load, status]);
+
+  return { status, repos, loading, error, busy, reload: load, connect, disconnect, createRepo, deleteRepo };
 }

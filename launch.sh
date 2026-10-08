@@ -7,7 +7,10 @@ PIDF="${TMPDIR:-/tmp}/daily-control.pid"
 note() { command -v notify-send >/dev/null && notify-send "Daily Control" "$1"; echo "$1" >> "$LOG"; }
 
 if [ "$1" = "stop" ]; then
-  [ -f "$PIDF" ] && kill "$(cat "$PIDF")" 2>/dev/null && rm -f "$PIDF" && note "تم الإيقاف"
+  PORT="$(grep -E '^PORT=' backend/.env 2>/dev/null | head -1 | cut -d= -f2)"; PORT="${PORT:-5000}"
+  curl -fs -X POST "http://127.0.0.1:$PORT/api/shutdown" >/dev/null 2>&1 || true
+  if [ -f "$PIDF" ]; then kill "$(cat "$PIDF")" 2>/dev/null || true; rm -f "$PIDF"; fi
+  note "تم طلب إيقاف Daily Control"
   exit 0
 fi
 
@@ -32,6 +35,13 @@ fi
 
 # 3) شغّل السيرفر لو مش شغال
 if ! curl -fs "$URL/api/health" >/dev/null 2>&1; then
+  (cd backend; nohup node server.js >>"$LOG" 2>&1 & echo $! > "$PIDF")
+  for _ in $(seq 1 40); do curl -fs "$URL/api/health" >/dev/null 2>&1 && break; sleep 0.5; done
+fi
+if curl -fs "$URL/api/health" >/dev/null 2>&1 && ! curl -fs "$URL/api/info" | grep -q '"version":"1.2.0"'; then
+  curl -fs -X POST "$URL/api/shutdown" >/dev/null 2>&1 || true
+  if [ -f "$PIDF" ]; then kill "$(cat "$PIDF")" 2>/dev/null || true; rm -f "$PIDF"; fi
+  sleep 0.4
   (cd backend; nohup node server.js >>"$LOG" 2>&1 & echo $! > "$PIDF")
   for _ in $(seq 1 40); do curl -fs "$URL/api/health" >/dev/null 2>&1 && break; sleep 0.5; done
 fi

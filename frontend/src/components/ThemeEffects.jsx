@@ -41,10 +41,10 @@ export default function ThemeEffects() {
     let last = performance.now();
     let clock = 0;
     let acc = 0;
-    const FRAME = 1 / 48; // سقف ~48 إطار/ثانية عشان الجهاز ما يسخنش
+    const FRAME = 1 / 30; // سقف 30 إطار/ثانية لتقليل استهلاك المعالج
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = Math.round(w * dpr);

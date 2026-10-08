@@ -26,6 +26,8 @@ function shutdown(signal) {
   }, 10000);
 }
 
+app.locals.shutdown = shutdown;
+
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('unhandledRejection', (reason) => {

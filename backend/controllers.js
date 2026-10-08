@@ -6,6 +6,7 @@ const modelController = require('./controllers/modelController');
 const aiController = require('./controllers/aiController');
 const terminalController = require('./controllers/terminalController');
 const taskController = require('./controllers/taskController');
+const sessionController = require('./controllers/sessionController');
 const { asyncHandler } = require('./middleware');
 
 // ─── Core ─────────────────────────────────────────────
@@ -13,7 +14,7 @@ const { asyncHandler } = require('./middleware');
 const getAppInfo = asyncHandler((req, res) => {
   res.json({
     name: 'Daily Control',
-    version: '1.0.0',
+    version: '1.2.0',
     env: process.env.NODE_ENV || 'development',
     timestamp: new Date().toISOString(),
   });
@@ -28,16 +29,25 @@ const getHealth = asyncHandler((req, res) => {
   });
 });
 
+const shutdown = asyncHandler((req, res) => {
+  const stop = req.app.locals.shutdown;
+  if (typeof stop !== 'function') return res.status(503).json({ error: 'Shutdown is not available' });
+  res.json({ ok: true, message: 'سيتم إيقاف البرنامج الآن' });
+  setImmediate(() => stop('WEB'));
+});
+
 // ─── Exports ──────────────────────────────────────────
 
 module.exports = {
   // Core
   getAppInfo,
   getHealth,
+  shutdown,
 
   // Projects
   listProjects: projectController.listProjects,
   discoverProjects: projectController.discoverProjects,
+  browseDirectories: projectController.browseDirectories,
   getProject: projectController.getProject,
   createProject: projectController.createProject,
   updateProject: projectController.updateProject,
@@ -100,4 +110,9 @@ module.exports = {
   generatePlan: taskController.generatePlan,
   breakdownTask: taskController.breakdownTask,
   suggestPriorities: taskController.suggestPriorities,
+  listSessions: sessionController.list,
+  getSession: sessionController.get,
+  createSession: sessionController.create,
+  updateSession: sessionController.update,
+  removeSession: sessionController.remove,
 };

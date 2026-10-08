@@ -2,6 +2,7 @@ const path = require('path');
 const db = require('../db');
 const projectScanner = require('../utils/projectScanner');
 const fs = require('fs');
+const os = require('os');
 const { assertRealPathInside } = require('../utils/pathGuard');
 
 const COLLECTION = 'projects';
@@ -13,6 +14,22 @@ function listProjects() {
 function discoverProjects() {
   const added = new Set(db.all(COLLECTION).map((p) => p.path).filter(Boolean));
   return require('../utils/projectDiscovery').discover().map((p) => ({ ...p, added: added.has(p.path) }));
+}
+
+function browseRoots() {
+  const extra = (process.env.PROJECT_ROOTS || '').split(/[;,]/).map((value) => value.trim()).filter(Boolean);
+  const media = process.platform === 'linux' ? path.join('/run/media', os.userInfo().username) : null;
+  return [...new Set([os.homedir(), media, ...extra].filter(Boolean))].map((root) => path.resolve(root)).filter((root) => fs.existsSync(root) && fs.statSync(root).isDirectory());
+}
+
+function browseDirectories(requestedPath) {
+  const roots = browseRoots();
+  const current = requestedPath ? path.resolve(String(requestedPath)) : roots[0];
+  const root = roots.find((candidate) => { try { assertRealPathInside(candidate, current); return true; } catch { return false; } }) || roots[0];
+  const realCurrent = assertRealPathInside(root, current);
+  const folders = fs.readdirSync(realCurrent, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'node_modules').map((entry) => ({ name: entry.name, path: path.join(realCurrent, entry.name) })).sort((a, b) => a.name.localeCompare(b.name));
+  const parent = path.dirname(realCurrent) === realCurrent ? null : path.dirname(realCurrent);
+  return { current: realCurrent, parent, roots, folders };
 }
 
 function getProject(id) {
@@ -86,6 +103,7 @@ async function getProjectTree(id) {
 module.exports = {
   listProjects,
   discoverProjects,
+  browseDirectories,
   getProject,
   createProject,
   updateProject,

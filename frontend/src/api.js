@@ -60,11 +60,13 @@ const del = (path) => request(path, { method: 'DELETE' });
 export const api = {
   health: () => get('/health'),
   info: () => get('/info'),
+  shutdown: () => post('/shutdown', {}),
 
   // ─── Projects ──────────────────────────────
   projects: {
     list: () => get('/projects'),
     discover: () => get('/projects/discover'),
+    browse: (path) => get(`/projects/browse${path ? `?path=${encodeURIComponent(path)}` : ''}`),
     get: (id) => get(`/projects/${encodeURIComponent(id)}`),
     create: (data) => post('/projects', data),
     update: (id, data) => put(`/projects/${encodeURIComponent(id)}`, data),
@@ -128,6 +130,11 @@ export const api = {
   // ─── AI ────────────────────────────────────
   ai: {
     chat: (data) => post('/ai/chat', data),
+    sessions: {
+      list: () => get('/ai/sessions'), get: (id) => get(`/ai/sessions/${encodeURIComponent(id)}`),
+      create: (data = {}) => post('/ai/sessions', data), update: (id, data) => put(`/ai/sessions/${encodeURIComponent(id)}`, data),
+      remove: (id) => del(`/ai/sessions/${encodeURIComponent(id)}`),
+    },
     fallback: (data) => post('/ai/fallback', data),
     parallel: (data) => post('/ai/parallel', data),
     // بث مباشر (SSE) — onChunk(text) لكل جزء، ويرجع النص الكامل

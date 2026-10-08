@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.get('/', c.listProjects);
 router.get('/discover', c.discoverProjects);
+router.get('/browse', c.browseDirectories);
 router.get('/:id', c.getProject);
 router.post('/', c.createProject);
 router.put('/:id', c.updateProject);

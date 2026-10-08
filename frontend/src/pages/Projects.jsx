@@ -11,11 +11,15 @@ export default function Projects() {
   const [saving, setSaving] = useState(false);
   const [found, setFound] = useState([]);
   const [manual, setManual] = useState(false);
+  const [browser, setBrowser] = useState(null);
+  const [browserLoading, setBrowserLoading] = useState(false);
 
   useEffect(() => {
     if (!showForm) return;
-    api.projects.discover().then((r) => setFound(r.projects || [])).catch(() => setManual(true));
+    setBrowserLoading(true);
+    Promise.all([api.projects.discover().then((r) => setFound(r.projects || [])), api.projects.browse().then((r) => setBrowser(r.browser))]).catch(() => setManual(true)).finally(() => setBrowserLoading(false));
   }, [showForm]);
+  const browseTo = async (path) => { setBrowserLoading(true); try { const result = await api.projects.browse(path); setBrowser(result.browser); } catch (err) { setFormError(err.message); } finally { setBrowserLoading(false); } };
 
   const pick = (value) => {
     if (value === '__manual') { setManual(true); setForm({ ...form, path: '' }); return; }
@@ -75,15 +79,7 @@ export default function Projects() {
                 dir="ltr"
               />
             ) : (
-              <select value={form.path} onChange={(e) => pick(e.target.value)} dir="ltr">
-                <option value="">— اختر مشروعًا من جهازك ({found.length}) —</option>
-                {found.map((p) => (
-                  <option key={p.path} value={p.path} disabled={p.added}>
-                    {p.name} — {p.path}{p.added ? ' (مضاف)' : ''}
-                  </option>
-                ))}
-                <option value="__manual">مسار آخر يدويًا…</option>
-              </select>
+              <><select value={form.path} onChange={(e) => pick(e.target.value)} dir="ltr"><option value="">— اختر مجلدًا من جهازك —</option>{browser?.parent && <option value={browser.parent}>⬆ مجلد أعلى</option>}{(browser?.folders || []).map((folder) => <option key={folder.path} value={folder.path}>{folder.name}</option>)}{found.map((p) => <option key={`project-${p.path}`} value={p.path} disabled={p.added}>{p.name} — {p.path}{p.added ? ' (مضاف)' : ''}</option>)}<option value="__manual">مسار آخر يدويًا…</option></select><div className="folder-browser-tools"><span className="text-muted path-preview" dir="ltr">{form.path || browser?.current || 'لم يتم اختيار مجلد'}</span><button type="button" className="secondary" disabled={!form.path || browserLoading} onClick={() => browseTo(form.path)}>فتح المجلد</button></div>{browserLoading && <small className="text-muted">جاري قراءة المجلدات...</small>}</>
             )}
           </label>
           <label>

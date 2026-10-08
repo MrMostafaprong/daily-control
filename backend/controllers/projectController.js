@@ -8,6 +8,7 @@ const listProjects = asyncHandler((req, res) => {
 const discoverProjects = asyncHandler((req, res) => {
   res.json({ projects: services.discoverProjects() });
 });
+const browseDirectories = asyncHandler((req, res) => res.json({ browser: services.browseDirectories(req.query.path) }));
 
 const getProject = asyncHandler((req, res) => {
   const project = services.getProject(req.params.id);
@@ -49,6 +50,7 @@ const getProjectTree = asyncHandler(async (req, res) => {
 module.exports = {
   listProjects,
   discoverProjects,
+  browseDirectories,
   getProject,
   createProject,
   updateProject,

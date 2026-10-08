@@ -1,15 +1,14 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
 import useTerminal from '../hooks/useTerminal';
-import { readSettings } from '../lib/settings';
 import TerminalPanel from '../components/TerminalPanel';
+import { formatCommand, parseCommandLine } from '../lib/commandLine';
 
 export default function Terminal() {
   const { allowed, history, running, error, run, clear } = useTerminal();
   const [projects, setProjects] = useState([]);
   const [projectId, setProjectId] = useState('');
-  const [command, setCommand] = useState('npm');
-  const [argsInput, setArgsInput] = useState('');
+  const [commandLine, setCommandLine] = useState('npm');
   const [runError, setRunError] = useState(null);
 
   useEffect(() => {
@@ -26,13 +25,13 @@ export default function Terminal() {
   const handleRun = async (e) => {
     e.preventDefault();
     setRunError(null);
-    const preview = `${command} ${argsInput}`.trim();
-    if (readSettings().confirmTerminal && !window.confirm(`تشغيل الأمر: ${preview} ؟`)) return;
+    let parsed;
+    try { parsed = parseCommandLine(commandLine); } catch (err) { setRunError(err.message); return; }
+    const preview = formatCommand(parsed.command, parsed.args);
+    if (!window.confirm(`موافقتك مطلوبة لتشغيل الأمر التالي داخل المشروع:\n\n${preview}\n\nهل تريد المتابعة؟`)) return;
     try {
-      // نقسم الـ args بالمسافات — بسيط وكافي حالياً
-      const args = argsInput.trim() ? argsInput.trim().split(/\s+/) : [];
-      await run(projectId, { command, args });
-      setArgsInput('');
+      await run(projectId, { ...parsed, approved: true });
+      setCommandLine('');
     } catch (err) {
       setRunError(err.message);
     }
@@ -57,15 +56,16 @@ export default function Terminal() {
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
-            <select value={command} onChange={(e) => setCommand(e.target.value)}>
-              {allowed.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
             <input
+              list="allowed-terminal-commands-page"
               dir="ltr"
-              value={argsInput}
-              onChange={(e) => setArgsInput(e.target.value)}
-              placeholder="install  أو  run dev"
+              value={commandLine}
+              onChange={(e) => setCommandLine(e.target.value)}
+              placeholder="cd src أو fastfetch أو npm run dev"
             />
+            <datalist id="allowed-terminal-commands-page">
+              {allowed.map((c) => <option key={c} value={c} />)}
+            </datalist>
             <button type="submit" disabled={running}>
               {running ? 'جاري...' : 'تشغيل'}
             </button>

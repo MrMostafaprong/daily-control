@@ -13,6 +13,7 @@ module.exports = {
   // ─── Projects ─────────────────────────────────────
   listProjects: projectService.listProjects,
   discoverProjects: projectService.discoverProjects,
+  browseDirectories: projectService.browseDirectories,
   getProject: projectService.getProject,
   createProject: projectService.createProject,
   updateProject: projectService.updateProject,

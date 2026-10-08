@@ -27,6 +27,15 @@ function validate({ command, args, cwd, timeout }) {
   if (!isAllowed(command)) {
     throw createError(403, `Command "${command}" is not allowed`);
   }
+  if (/[;&|<>`$()\\\n\r]/.test(command) || args.some((arg) => /[;&|<>`$()\\\n\r]/.test(arg))) {
+    throw createError(400, 'تركيب أوامر shell غير مسموح؛ شغّل أمرًا واحدًا فقط');
+  }
+  if (['mkdir', 'touch', 'nano'].includes(command)) {
+    const paths = args.filter((arg) => arg !== '-p');
+    if (!paths.length || args.some((arg) => arg.startsWith('-') && arg !== '-p')) throw createError(400, `${command}: استخدم مسارًا نسبيًا داخل المشروع`);
+    for (const target of paths) if (!target || target.startsWith('/') || target === '..' || target.includes('../') || target.includes('..\\')) throw createError(403, 'المسار يجب أن يبقى داخل مجلد المشروع');
+    if (command === 'nano') throw createError(501, 'nano تفاعلي ولا يعمل داخل هذا الترمينال؛ استخدم محرر الملفات داخل مساحة العمل');
+  }
   if (!cwd || typeof cwd !== 'string') {
     throw createError(400, 'cwd is required');
   }
@@ -89,7 +98,9 @@ function execute({ command, args = [], cwd, timeout }) {
             ok: false,
             code: typeof err.code === 'number' ? err.code : 1,
             stdout: stdout || '',
-            stderr: stderr || err.message || '',
+            stderr: err.code === 'ENOENT'
+              ? `الأمر غير مثبت أو غير موجود في PATH: ${command}`
+              : (stderr || err.message || ''),
             duration,
             timedOut: err.killed === true,
           });

@@ -181,8 +181,17 @@ input:focus, textarea:focus, select:focus {
   border-radius: var(--radius);
   padding: 20px;
   box-shadow: var(--shadow);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.15);
-  backdrop-filter: blur(var(--blur)) saturate(1.15);
+  -webkit-backdrop-filter: blur(6px) saturate(1.04);
+  backdrop-filter: blur(6px) saturate(1.04);
+  animation: card-rise 0.42s ease both;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.card:hover { transform: translateY(-2px); box-shadow: 0 16px 36px color-mix(in srgb, var(--primary) 12%, transparent), var(--shadow); }
+.sidebar, .header { backdrop-filter: blur(8px) saturate(1.04); -webkit-backdrop-filter: blur(8px) saturate(1.04); }
+@keyframes card-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  .card:hover { transform: none; }
 }
 
 .settings-section { display: flex; flex-direction: column; gap: 14px; }
@@ -339,6 +348,8 @@ input:focus, textarea:focus, select:focus {
   align-items: center;
   font-size: 13px;
 }
+.shutdown-button { margin-inline-start: 14px; background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 6px 10px; font-size: 12px; }
+.shutdown-button:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); }
 /* ─── Dashboard / Settings ──────────────────── */
 
 .model-list {
@@ -402,6 +413,9 @@ code {
   font-size: 14px;
   color: var(--text-muted);
 }
+.folder-browser-tools { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.path-preview { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-browser-tools button { flex: 0 0 auto; padding: 7px 10px; font-size: 12px; }
 
 .checkbox-label {
   flex-direction: row !important;
@@ -630,6 +644,20 @@ code {
 
 .chat-toolbar { display: flex; gap: 8px; margin-bottom: 12px; }
 .chat-toolbar select { flex: 1; }
+.ai-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; align-items: start; }
+.ai-sessions { padding: 14px; position: sticky; top: 86px; }
+.sessions-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 12px; }
+.sessions-head h3 { font-size: 16px; }
+.sessions-head button { padding: 6px 9px; font-size: 12px; }
+.sessions-list { display: flex; flex-direction: column; gap: 6px; max-height: 65vh; overflow-y: auto; }
+.session-row { display: flex; align-items: center; gap: 2px; border: 1px solid transparent; border-radius: var(--radius); background: var(--bg-hover); }
+.session-row.active { border-color: var(--primary); box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 14%, transparent); }
+.session-select { flex: 1; min-width: 0; text-align: start; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: transparent; color: var(--text); padding: 9px 8px; }
+.session-select:hover { background: transparent; }
+.session-action { background: transparent; color: var(--text-muted); padding: 6px; font-size: 13px; }
+.session-action:hover { background: transparent; color: var(--text); }
+.danger-text:hover { color: var(--danger); }
+@media (max-width: 800px) { .ai-layout { grid-template-columns: 1fr; } .ai-sessions { position: static; } .sessions-list { flex-direction: row; max-height: none; overflow-x: auto; } .session-row { min-width: 190px; } }
 
 .chat-container {
   flex: 1;

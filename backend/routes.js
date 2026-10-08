@@ -6,6 +6,7 @@ const router = express.Router();
 // ─── Core ─────────────────────────────────────────────
 router.get('/health', c.getHealth);
 router.get('/info', c.getAppInfo);
+router.post('/shutdown', c.shutdown);
 
 // ─── Sub-routers ──────────────────────────────────────
 router.use('/projects', require('./routes/projects'));

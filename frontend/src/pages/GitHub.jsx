@@ -9,7 +9,7 @@ function defaultGithubSettings() {
 }
 
 export default function GitHub() {
-  const { status, repos, loading, error, busy, reload, connect, disconnect, createRepo } = useGitHub();
+  const { status, repos, loading, error, busy, reload, connect, disconnect, createRepo, deleteRepo } = useGitHub();
   const [token, setToken] = useState('');
   const [connectError, setConnectError] = useState(null);
   const [showRepoForm, setShowRepoForm] = useState(false);
@@ -178,6 +178,7 @@ export default function GitHub() {
                   {repo.description && <p className="text-muted">{repo.description}</p>}
                   <div className="project-actions" style={{ marginTop: '12px' }}>
                     <button onClick={() => setSelectedRepo(repo)}>📂 فتح الملفات</button>
+                    <button className="danger" disabled={busy} onClick={() => deleteRepo(repo)}>🗑️ حذف الريبو</button>
                   </div>
                 </div>
               ))}
