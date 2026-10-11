@@ -65,6 +65,9 @@ module.exports = {
   // ─── Terminal ─────────────────────────────────────
   runTerminalCommand: terminalService.run,
   listAllowedCommands: terminalService.listAllowed,
+  upsertTerminalCommand: terminalService.upsertCommand,
+  removeTerminalCommand: terminalService.removeCommand,
+  reloadTerminalCommands: terminalService.reloadCommands,
 
   // ─── Tasks ────────────────────────────────────────
   listTasks: taskService.list,

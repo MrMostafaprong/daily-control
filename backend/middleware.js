@@ -89,6 +89,19 @@ function asyncHandler(fn) {
   };
 }
 
+function requireRoot(req, res, next) {
+  const rootSession = require('./services/rootSession');
+  const token = rootSession.extractToken(req);
+  if (!rootSession.isValid(token)) {
+    const err = new Error('عملية حساسة — مطلوب تفعيل الروت (ROOT_REQUIRED)');
+    err.statusCode = 403;
+    err.code = 'ROOT_REQUIRED';
+    return next(err);
+  }
+  req.rootToken = token;
+  return next();
+}
+
 function createError(statusCode, message, meta = {}) {
   const err = new Error(message);
   err.statusCode = statusCode;
@@ -101,6 +114,7 @@ module.exports = {
   rateLimit,
   requireAccessToken,
   terminalEnabled,
+  requireRoot,
   notFound,
   errorHandler,
   asyncHandler,

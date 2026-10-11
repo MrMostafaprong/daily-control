@@ -132,8 +132,10 @@ export const api = {
   ai: {
     chat: (data) => post('/ai/chat', data),
     sessions: {
-      list: () => get('/ai/sessions'), get: (id) => get(`/ai/sessions/${encodeURIComponent(id)}`),
-      create: (data = {}) => post('/ai/sessions', data), update: (id, data) => put(`/ai/sessions/${encodeURIComponent(id)}`, data),
+      list: () => get('/ai/sessions'),
+      get: (id) => get(`/ai/sessions/${encodeURIComponent(id)}`),
+      create: (data = {}) => post('/ai/sessions', data),
+      update: (id, data) => put(`/ai/sessions/${encodeURIComponent(id)}`, data),
       remove: (id) => del(`/ai/sessions/${encodeURIComponent(id)}`),
     },
     fallback: (data) => post('/ai/fallback', data),
@@ -186,7 +188,38 @@ export const api = {
   // ─── Terminal ──────────────────────────────
   terminal: {
     allowed: () => get('/terminal/allowed'),
-    run: (projectId, data) => post(`/terminal/run/${encodeURIComponent(projectId)}`, data),
+    run: (projectId, data, { rootToken } = {}) => request(`/terminal/run/${encodeURIComponent(projectId)}`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: rootToken ? { 'x-root-token': rootToken } : {},
+    }),
+    commands: {
+      list: () => get('/terminal/commands'),
+      upsert: (data, rootToken) => request('/terminal/commands', {
+        method: 'POST', body: JSON.stringify(data),
+        headers: rootToken ? { 'x-root-token': rootToken } : {},
+      }),
+      remove: (name, rootToken) => request(`/terminal/commands/${encodeURIComponent(name)}`, {
+        method: 'DELETE', headers: rootToken ? { 'x-root-token': rootToken } : {},
+      }),
+      reload: (rootToken) => request('/terminal/commands/reload', {
+        method: 'POST', body: JSON.stringify({}),
+        headers: rootToken ? { 'x-root-token': rootToken } : {},
+      }),
+    },
+  },
+
+  // ─── Roles: user vs root ───────────────────────
+  auth: {
+    rootStatus: () => get('/auth/root/status'),
+    rootUnlock: (password) => post('/auth/root/unlock', { password }),
+    rootVerify: (rootToken) => request('/auth/root/verify', {
+      headers: rootToken ? { 'x-root-token': rootToken } : {},
+    }),
+    rootLock: (rootToken) => request('/auth/root/lock', {
+      method: 'POST', body: JSON.stringify({}),
+      headers: rootToken ? { 'x-root-token': rootToken } : {},
+    }),
   },
 
   // ─── Tasks ─────────────────────────────────

@@ -97,6 +97,15 @@ module.exports = {
   // Terminal
   runTerminalCommand: terminalController.runCommand,
   listAllowedCommands: terminalController.listAllowedCommands,
+  upsertTerminalCommand: terminalController.upsertCommand,
+  removeTerminalCommand: terminalController.removeCommand,
+  reloadTerminalCommands: terminalController.reloadCommands,
+
+  // Root auth (user vs root)
+  rootStatus: require('./controllers/rootController').getStatus,
+  rootUnlock: require('./controllers/rootController').unlock,
+  rootLock: require('./controllers/rootController').lock,
+  rootVerify: require('./controllers/rootController').verify,
 
   // Tasks
   listTasks: taskController.listTasks,

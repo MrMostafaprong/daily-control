@@ -1091,3 +1091,14 @@ button, input, textarea, select { font-size: calc(var(--fsize) - 1px); font-weig
 button, .sidebar-link.active, .conv-item.active, .chat-msg.user .chat-bubble, .tab.active, .plan-order, .tree-file.selected { color: var(--on-primary, #fff); }
 button.secondary { color: var(--text); }
 button.danger { color: #fff; }
+
+/* ─── سطر باسورد النظام داخل الترمنال (يتلون مع الثيمات الأربع) ─── */
+.sudo-inline { border: 1px dashed var(--warning); border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+.sudo-inline-form { display: flex; gap: 8px; align-items: center; margin-top: 6px; flex-wrap: wrap; }
+.sudo-inline-label { color: var(--warning); font-family: monospace; font-size: 13px; }
+.sudo-inline-form input { flex: 1; min-width: 140px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-solid); color: var(--text); font-family: monospace; }
+.sudo-inline-form input:focus { outline: 2px solid var(--warning); border-color: var(--warning); }
+.sudo-inline-form button { padding: 6px 16px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; background: var(--bg-hover); color: var(--text); }
+.sudo-inline-form button[type='submit'] { background: var(--warning); border-color: var(--warning); color: #000; font-weight: bold; }
+.sudo-inline-form button[type='submit']:disabled { opacity: 0.5; cursor: not-allowed; }
+.sudo-inline-note { font-size: 11px; margin-top: 6px; }
