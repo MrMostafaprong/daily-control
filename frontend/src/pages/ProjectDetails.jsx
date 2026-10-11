@@ -30,6 +30,9 @@ export default function ProjectDetails() {
   const [pushing, setPushing] = useState(false);
   const [pushResult, setPushResult] = useState(null);
   const [pushError, setPushError] = useState(null);
+  const [autoSync, setAutoSync] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,12 +102,27 @@ export default function ProjectDetails() {
       const res = await api.github.push(id, {
         repoName: repoName.trim(),
         commitMessage: readSettings().defaultCommitMessage || 'تحديث من Daily Control',
+        sync: autoSync,
       });
       setPushResult(res?.result || res);
     } catch (err) {
       setPushError(err.message);
     } finally {
       setPushing(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setSyncing(true);
+    setPushError(null);
+    setSyncResult(null);
+    try {
+      const res = await api.github.sync(id, {});
+      setSyncResult(res?.result || res);
+    } catch (err) {
+      setPushError(err.message);
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -159,6 +177,7 @@ export default function ProjectDetails() {
             اربط حساب GitHub أولاً من صفحة <Link to="/github">GitHub</Link>
           </p>
         ) : project.path ? (
+          <>
           <form onSubmit={handlePush} className="push-form">
             <input
               value={repoName}
@@ -169,7 +188,20 @@ export default function ProjectDetails() {
             <button type="submit" disabled={pushing}>
               {pushing ? 'جاري الرفع...' : '⬆️ رفع / تحديث'}
             </button>
+            <button type="button" className="secondary" disabled={syncing} onClick={handleSync} title="سحب آخر شغل الريموت ودمجه (pull --rebase)">
+              {syncing ? 'جاري...' : '🔄 مزامنة'}
+            </button>
           </form>
+          <label style={{ display: 'flex', gap: '6px', alignItems: 'center', marginTop: '8px', fontSize: '13px' }} className="text-muted">
+            <input type="checkbox" checked={autoSync} onChange={(e) => setAutoSync(e.target.checked)} />
+            مزامنة تلقائية قبل الدفع (لو الريموت متقدم يسحب ويدمج ثم يدفع)
+          </label>
+          {syncResult && (
+            <div className="success-box" style={{ marginTop: '10px' }}>
+              ✅ تمت المزامنة — متقدم {syncResult?.status?.ahead ?? '—'} / متأخر {syncResult?.status?.behind ?? '—'}
+            </div>
+          )}
+          </>
         ) : (
           <p className="text-muted">المشروع مفيهوش مسار — ضيف المسار أولاً</p>
         )}
@@ -178,6 +210,7 @@ export default function ProjectDetails() {
         {pushResult && (
           <div className="success-box" style={{ marginTop: '10px' }}>
             ✅ تم الرفع بنجاح
+            {pushResult?.git?.synced && ' (بعد مزامنة تلقائية مع الريموت)'}
             {pushResult?.repo?.url && (
               <>
                 {' '}—{' '}

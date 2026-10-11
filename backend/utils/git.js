@@ -81,6 +81,82 @@ async function push(dir, remote, branch, opts = {}) {
   return run(dir, args);
 }
 
+function isNonFastForward(err) {
+  const combined = `${err.stderr || ''}\n${err.stdout || ''}\n${err.message || ''}`;
+  return /fetch first|non-fast-forward|\[rejected\]|failed to push some refs/i.test(combined);
+}
+
+function isRebaseConflict(err) {
+  const combined = `${err.stderr || ''}\n${err.stdout || ''}\n${err.message || ''}`;
+  return /CONFLICT|Failed to merge|could not apply|already exists|untracked working tree files/i.test(combined);
+}
+
+async function conflictedFiles(dir) {
+  try {
+    const { stdout } = await run(dir, ['diff', '--name-only', '--diff-filter=U']);
+    return stdout.split('\n').map((s) => s.trim()).filter(Boolean);
+  } catch { return []; }
+}
+
+// سحب مع إعادة تأسيس — يحل حالة "fetch first" تلقائيًا.
+// عند تعارض: يلغي العملية ويرمي خطأً عربيًا بأسماء الملفات المتعارضة.
+async function pullRebase(dir, remote, branch) {
+  try {
+    return await run(dir, ['pull', '--rebase', remote, branch]);
+  } catch (err) {
+    if (isRebaseConflict(err)) {
+      const files = await conflictedFiles(dir); // قبل الإجهاض — بعده القائمة تتمسح
+      try { await run(dir, ['rebase', '--abort']); } catch { /* ignore */ }
+      const error = new Error(
+        `تعارض دمج — أُجهضت المزامنة تلقائيًا ولم يتغير شيء.\n` +
+        (files.length ? `الملفات المتعارضة: ${files.join('، ')}\n` : '') +
+        `حل التعارض يدويًا (عدّل الملفات ثم git add و git rebase --continue) وحاول الدفع مجددًا.`
+      );
+      error.statusCode = 409;
+      error.code = 'MERGE_CONFLICT';
+      error.files = files;
+      throw error;
+    }
+    throw err;
+  }
+}
+
+// دفع مع مزامنة تلقائية: لو رُفض الدفع لأن الريموت متقدم، يسحب (rebase) ثم يدفع مجددًا.
+async function pushWithSync(dir, remote, branch, opts = {}) {
+  const force = !!opts.force;
+  const sync = opts.sync !== false; // مفعّل افتراضيًا
+  try {
+    const out = await push(dir, remote, branch, { force });
+    return { ...out, synced: false };
+  } catch (err) {
+    if (!sync || force || !isNonFastForward(err)) throw err;
+    const pulled = await pullRebase(dir, remote, branch);
+    const out = await push(dir, remote, branch, { force });
+    return { ...out, synced: true, pull: pulled.stdout };
+  }
+}
+
+async function fetch(dir, remote = 'origin') {
+  return run(dir, ['fetch', remote]);
+}
+
+// حالة التزامن: كم كوميت متقدم/متأخر عن الريموت (null لو لا يوجد upstream)
+async function syncStatus(dir, remote = 'origin', branch = 'main') {
+  try {
+    await fetch(dir, remote);
+    let upstream = branch;
+    try {
+      const { stdout } = await run(dir, ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}']);
+      upstream = stdout || branch;
+    } catch { upstream = `${remote}/${branch}`; }
+    const { stdout } = await run(dir, ['rev-list', '--left-right', '--count', `HEAD...${upstream}`]);
+    const [ahead, behind] = stdout.split(/\s+/).map((n) => Number(n) || 0);
+    return { ahead, behind, branch, upstream };
+  } catch {
+    return { ahead: null, behind: null, branch, upstream: null };
+  }
+}
+
 async function initAndPush(dir, { remoteUrl, branch = 'main', commitMessage, force = false }) {
   const installed = await isInstalled();
   if (!installed) {
@@ -117,5 +193,10 @@ module.exports = {
   renameBranch,
   setRemote,
   push,
+  pushWithSync,
+  pullRebase,
+  fetch,
+  syncStatus,
+  isNonFastForward,
   initAndPush,
 };

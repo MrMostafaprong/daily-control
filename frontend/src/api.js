@@ -82,8 +82,10 @@ export const api = {
     disconnect: () => del('/github/disconnect'),
     repos: () => get('/github/repos'),
     createRepo: (data) => post('/github/repos', data),
-    push: (projectId, { repoName, commitMessage }) =>
-      post(`/github/push/${encodeURIComponent(projectId)}`, { repoName, commitMessage }),
+    push: (projectId, { repoName, commitMessage, sync = true }) =>
+      post(`/github/push/${encodeURIComponent(projectId)}`, { repoName, commitMessage, sync }),
+    sync: (projectId, { branch } = {}) =>
+      post(`/github/sync/${encodeURIComponent(projectId)}`, { branch }),
     contents: (owner, repo, path = '', ref) => {
       const params = new URLSearchParams();
       if (path) params.set('path', path);

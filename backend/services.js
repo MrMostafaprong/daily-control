@@ -28,6 +28,7 @@ module.exports = {
   githubListRepos: githubService.githubListRepos,
   githubCreateRepo: githubService.githubCreateRepo,
   githubPushProject: githubService.githubPushProject,
+  githubSyncProject: githubService.githubSyncProject,
   githubListContents: githubService.githubListContents,
   githubWriteFile: githubService.githubWriteFile,
   githubDeleteFile: githubService.githubDeleteFile,

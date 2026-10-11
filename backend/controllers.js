@@ -7,6 +7,7 @@ const aiController = require('./controllers/aiController');
 const terminalController = require('./controllers/terminalController');
 const taskController = require('./controllers/taskController');
 const sessionController = require('./controllers/sessionController');
+const rootController = require('./controllers/rootController');
 const { asyncHandler } = require('./middleware');
 
 // ─── Core ─────────────────────────────────────────────
@@ -31,7 +32,9 @@ const getHealth = asyncHandler((req, res) => {
 
 const shutdown = asyncHandler((req, res) => {
   const stop = req.app.locals.shutdown;
-  if (typeof stop !== 'function') return res.status(503).json({ error: 'Shutdown is not available' });
+  if (typeof stop !== 'function') {
+    return res.status(503).json({ error: 'Shutdown is not available' });
+  }
   res.json({ ok: true, message: 'سيتم إيقاف البرنامج الآن' });
   setImmediate(() => stop('WEB'));
 });
@@ -62,6 +65,7 @@ module.exports = {
   githubListRepos: githubController.githubListRepos,
   githubCreateRepo: githubController.githubCreateRepo,
   githubPushProject: githubController.githubPushProject,
+  githubSyncProject: githubController.githubSyncProject,
   githubListContents: githubController.githubListContents,
   githubWriteFile: githubController.githubWriteFile,
   githubDeleteFile: githubController.githubDeleteFile,
@@ -102,10 +106,10 @@ module.exports = {
   reloadTerminalCommands: terminalController.reloadCommands,
 
   // Root auth (user vs root)
-  rootStatus: require('./controllers/rootController').getStatus,
-  rootUnlock: require('./controllers/rootController').unlock,
-  rootLock: require('./controllers/rootController').lock,
-  rootVerify: require('./controllers/rootController').verify,
+  rootStatus: rootController.getStatus,
+  rootUnlock: rootController.unlock,
+  rootLock: rootController.lock,
+  rootVerify: rootController.verify,
 
   // Tasks
   listTasks: taskController.listTasks,
@@ -120,6 +124,8 @@ module.exports = {
   generatePlan: taskController.generatePlan,
   breakdownTask: taskController.breakdownTask,
   suggestPriorities: taskController.suggestPriorities,
+
+  // AI sessions
   listSessions: sessionController.list,
   getSession: sessionController.get,
   createSession: sessionController.create,

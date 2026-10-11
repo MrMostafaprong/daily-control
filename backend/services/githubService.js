@@ -173,7 +173,7 @@ async function githubCreateRepo({ name, description, isPrivate }) {
   return repo;
 }
 
-async function githubPushProject(projectId, { repoName, commitMessage }) {
+async function githubPushProject(projectId, { repoName, commitMessage, sync = true }) {
   if (typeof repoName !== 'string' || !/^[A-Za-z0-9._-]{1,100}$/.test(repoName)) {
     const err = new Error('Repository name contains invalid characters');
     err.statusCode = 400;
@@ -209,13 +209,29 @@ async function githubPushProject(projectId, { repoName, commitMessage }) {
   }
   const remoteUrl = `https://${encodeURIComponent(token)}@github.com/${repo.fullName}.git`;
   const publicRemoteUrl = `https://github.com/${repo.fullName}.git`;
+  const branch = repo.defaultBranch || 'main';
   let result;
   try {
-    result = await git.initAndPush(project.path, {
-      remoteUrl,
-      branch: repo.defaultBranch || 'main',
-      commitMessage: commitMessage || 'Initial commit from Daily Control',
-    });
+    // دفع مع مزامنة تلقائية: pull --rebase ثم push عند رفض non-fast-forward
+    const installed = await git.isInstalled();
+    if (!installed) {
+      const err = new Error('git is not installed or not in PATH');
+      err.statusCode = 500;
+      throw err;
+    }
+    if (!require('fs').existsSync(project.path)) {
+      const err = new Error(`Directory does not exist: ${project.path}`);
+      err.statusCode = 400;
+      throw err;
+    }
+    await git.init(project.path);
+    const commitMessageFinal = commitMessage || 'تحديث من Daily Control';
+    await git.addAll(project.path);
+    const commitOut = await git.commit(project.path, commitMessageFinal);
+    await git.renameBranch(project.path, branch);
+    await git.setRemote(project.path, 'origin', remoteUrl);
+    const pushed = await git.pushWithSync(project.path, 'origin', branch, { sync: sync !== false });
+    result = { branch, committed: !commitOut.empty, output: pushed.stdout, synced: pushed.synced };
   } finally {
     // Never leave the access token persisted in .git/config after the push.
     try { await git.setRemote(project.path, 'origin', publicRemoteUrl); } catch {}
@@ -224,6 +240,30 @@ async function githubPushProject(projectId, { repoName, commitMessage }) {
     repo: { name: repo.name, fullName: repo.fullName, url: repo.url },
     git: result,
   };
+}
+
+// مزامنة مستقلة: pull --rebase من الريموت بدون أي كوميت جديد
+async function githubSyncProject(projectId, { branch } = {}) {
+  const project = projectService.getProject(projectId);
+  if (!project) {
+    const err = new Error('Project not found');
+    err.statusCode = 404;
+    throw err;
+  }
+  if (!project.path) {
+    const err = new Error('Project has no path set');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!git.isRepo(project.path)) {
+    const err = new Error('المشروع ليس مستودع git بعد — ادفع أولًا');
+    err.statusCode = 400;
+    throw err;
+  }
+  const target = typeof branch === 'string' && branch ? branch : 'main';
+  const pulled = await git.pullRebase(project.path, 'origin', target);
+  const status = await git.syncStatus(project.path, 'origin', target);
+  return { branch: target, pulled: pulled.stdout, status };
 }
 
 async function githubListContents(owner, repo, filePath = '', ref) {
@@ -289,9 +329,17 @@ async function githubDeleteRepo(owner, repo) {
   await ghFetch(repoEndpoint(owner, repo), { method: 'DELETE' });
   return { deleted: true, fullName: `${owner}/${repo}` };
 }
+
 async function githubUpdateVisibility(owner, repo, isPrivate) {
-  if (typeof isPrivate !== 'boolean') { const err = new Error('isPrivate must be boolean'); err.statusCode = 400; throw err; }
-  const result = await ghFetch(repoEndpoint(owner, repo), { method: 'PATCH', body: JSON.stringify({ private: isPrivate }) });
+  if (typeof isPrivate !== 'boolean') {
+    const err = new Error('isPrivate must be boolean');
+    err.statusCode = 400;
+    throw err;
+  }
+  const result = await ghFetch(repoEndpoint(owner, repo), {
+    method: 'PATCH',
+    body: JSON.stringify({ private: isPrivate }),
+  });
   return { name: result.name, fullName: result.full_name, private: result.private, url: result.html_url };
 }
 
@@ -328,6 +376,7 @@ module.exports = {
   githubListRepos,
   githubCreateRepo,
   githubPushProject,
+  githubSyncProject,
   githubListContents,
   githubWriteFile,
   githubDeleteFile,

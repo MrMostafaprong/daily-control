@@ -29,9 +29,16 @@ const githubCreateRepo = asyncHandler(async (req, res) => {
 
 const githubPushProject = asyncHandler(async (req, res) => {
   const { projectId } = req.params;
-  const { repoName, commitMessage } = req.body || {};
+  const { repoName, commitMessage, sync } = req.body || {};
   if (!repoName) throw createError(400, 'repoName is required');
-  const result = await services.githubPushProject(projectId, { repoName, commitMessage });
+  const result = await services.githubPushProject(projectId, { repoName, commitMessage, sync });
+  res.json({ result });
+});
+
+const githubSyncProject = asyncHandler(async (req, res) => {
+  const { projectId } = req.params;
+  const { branch } = req.body || {};
+  const result = await services.githubSyncProject(projectId, { branch });
   res.json({ result });
 });
 
@@ -57,7 +64,12 @@ const githubDeleteRepo = asyncHandler(async (req, res) => {
   const result = await services.githubDeleteRepo(req.params.owner, req.params.repo);
   res.json({ result });
 });
-const githubUpdateVisibility = asyncHandler(async (req, res) => { const result = await services.githubUpdateVisibility(req.params.owner, req.params.repo, req.body?.isPrivate); res.json({ result }); });
+
+const githubUpdateVisibility = asyncHandler(async (req, res) => {
+  const isPrivate = req.body?.isPrivate;
+  const result = await services.githubUpdateVisibility(req.params.owner, req.params.repo, isPrivate);
+  res.json({ result });
+});
 
 const githubCreateIssue = asyncHandler(async (req, res) => {
   const result = await services.githubCreateIssue(req.params.owner, req.params.repo, req.body || {});
@@ -76,6 +88,7 @@ module.exports = {
   githubListRepos,
   githubCreateRepo,
   githubPushProject,
+  githubSyncProject,
   githubListContents,
   githubWriteFile,
   githubDeleteFile,
