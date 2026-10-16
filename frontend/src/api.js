@@ -60,7 +60,11 @@ const del = (path) => request(path, { method: 'DELETE' });
 export const api = {
   health: () => get('/health'),
   info: () => get('/info'),
-  shutdown: () => post('/shutdown', {}),
+  shutdown: (rootToken) => request('/shutdown', {
+    method: 'POST',
+    body: JSON.stringify({}),
+    headers: rootToken ? { 'x-root-token': rootToken } : {},
+  }),
 
   // ─── Projects ──────────────────────────────
   projects: {
