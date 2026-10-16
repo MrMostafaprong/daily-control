@@ -37,9 +37,14 @@ export default function Header() {
 
   const handleShutdown = async () => {
     if (!window.confirm('سيتم إيقاف الـ frontend والـ backend وتحرير موارد الجهاز. هل تريد المتابعة؟')) return;
+    const rootToken = sessionStorage.getItem('dc-root-token') || '';
+    if (!rootToken) {
+      window.alert('الإيقاف عملية حساسة — فعّل الروت أولًا من صفحة الترمينال ثم أعد المحاولة.');
+      return;
+    }
     setStopping(true);
     try {
-      await api.shutdown();
+      await api.shutdown(rootToken);
       setBackendOnline(false);
     } catch (err) {
       setStopping(false);
